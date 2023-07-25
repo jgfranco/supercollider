@@ -14,7 +14,7 @@ SynthDef(\kick, {
 	snd = snd + (SinOsc.ar(XLine.ar(4000,50.01)) * Env.perc(0.0001, 0.01).ar * -10.dbamp);
 
 	// add white noise
-	snd = snd + (BPF.ar(WhiteNoise.ar, 10120,0.1) * (Env.perc(0.001,0.03).ar));
+	snd = snd + (BPF.ar(WhiteNoise.ar, 10120,0.3) * (Env.perc(0.001,0.03).ar));
 
 	snd = snd * Env.perc(0.001,0.7).ar(Done. freeSelf); // shape the kick with an Envelope
 	snd = snd * -10.dbamp; // decrease amplitud by 10db?
