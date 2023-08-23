@@ -1,35 +1,54 @@
-// https://www.youtube.com/watch?v=gsAxCuUcy0o     @16:00
+// https://www.youtube.com/watch?v=gsAxCuUcy0o     @32:19
 s.boot;
 s.quit;
+Synth(\kick);
 (
+
 SynthDef(\kick, {
 	var snd;
-	snd = SinOsc.ar(50 * (1 + (4 * Env.perc(0.001, 0.3, curve: -8).ar)));
-	snd = snd + (BPF.ar(Hasher.ar(Sweep.ar), 8600,0.3) * -15.dbamp * Env.perc(0.05,0.3).ar);
-	snd = snd + ((snd * 10.dbamp).tanh * -10.dbamp);
-	snd = snd + ((snd * 3.dbamp).fold2 * -10.dbamp);
-	snd = snd + (snd * 10).tanh;
-	snd = snd + snd.fold2;
-	snd = (snd * (1 + Env.perc(0.001, 0.1).ar)).clip2;
-	snd = snd * Env.perc(0.001, 0.2).ar(Done.freeSelf);
-	snd = snd * \amp.kr(-10.dbamp);
+	snd = SinOsc.ar((57) * (1+ (4 * Env.perc(0, 0.13, curve: -8).ar)) * XLine.ar(1,0.5, 1));
+	snd = snd + (SinOsc.ar(XLine.ar(4000,50.01)) * Env.perc(0.0001, 0.01).ar * -5.dbamp);
+	snd = snd + (BPF.ar(Hasher.ar(Sweep.ar), 10120,0.5) * (Env.perc(0.001,0.03).ar * -8.dbamp));
+	snd = snd * (1 + (2 * Env.perc(0.001, 0.2).ar));
+	snd = (snd * 0.dbamp).tanh;
+	snd = snd * Env.perc(0.001,1.3, curve: -8).ar(Done.freeSelf);
+	snd = snd * -5.dbamp;
 	snd = Pan2.ar(snd, \pan.kr(0));
 	Out.ar(\out.kr(0), snd);
 }).add;
+// SynthDef(\kick, {
+// 	var snd;
+// 	snd = SinOsc.ar(55 * (1 + (3* Env.perc(0.001, 0.3, curve: -8).ar)));
+// 	snd = snd + (BPF.ar(Hasher.ar(Sweep.ar), 8600,0.3) * -15.dbamp * Env.perc(0.05,0.3).ar);
+// 	snd = snd * \velocity.kr(1);
+// 	snd = snd + ((snd * 10.dbamp).tanh * -5.dbamp);
+// 	snd = snd + ((snd * 3.dbamp).fold2 * -10.dbamp);
+// 	snd = snd + (snd * 10).tanh;
+// 	snd = snd + snd.fold2;
+// 	snd = (snd * (1 + Env.perc(0.001, 0.1).ar)).clip2;
+//
+// 	snd = snd * \amp.kr(-10.dbamp);
+// 	snd = snd * Env.perc(0.001, 0.2).ar(Done.freeSelf);
+// 	snd = Pan2.ar(snd, \pan.kr(0));
+// 	Out.ar(\out.kr(0), snd);
+// }).add;
 
 SynthDef(\bass, {
-	var snd;
-	snd = SinOsc.ar(\freq.kr(60) * (1 + (0.5 * Env.perc(0.01,\pitchDecay.kr(0.5)).ar)));
+	var snd, velocity, freq;
+	velocity = \velocity.kr(0.5);
+	freq = \freq.kr(70) * (1 + (0.5 * Env.perc(0.01, \pitchDecay.kr(0.5)).ar * velocity));
+	snd = SinOsc.ar(freq);
 	snd = snd + (BPF.ar(Hasher.ar(Sweep.ar + [0, 1]), 4600, 0.3) * -30.dbamp);
 	snd = snd + ((snd * 10).tanh * -10.dbamp);
 	snd = (snd * 1.dbamp).fold2;
-	snd = snd * Env.perc(0, \timbreDecay.kr(3)).ar;
+	snd = snd * Env.perc(0, \timbreDecay.kr(3.0)).ar * velocity;
 	2.do {
 		snd = snd + (PitchShift.ar(snd, 0.1, 2) * -10.dbamp);
 		snd = (snd * 10.dbamp).tanh;
 	};
-	snd = LPF.ar(snd, 100) + HPF.ar(snd, 3000);
-	snd = snd * Env.asr(0.3, 1, 0.3).ar(Done.freeSelf, \gate.kr(1));
+	snd = LPF.ar(snd, 250) + HPF.ar(snd, 3000);
+	snd = HPF.ar(snd, freq) + SinOsc.ar(freq);
+	snd = snd * Env.asr(0.3, 1, 0.03).ar(Done.freeSelf, \gate.kr(1));
 	snd = snd * \amp.kr(-10.dbamp);
 	snd = Pan2.ar(snd, \pan.kr(0));
 	Out.ar(\out.kr(0), snd);
@@ -37,7 +56,7 @@ SynthDef(\bass, {
 // snare
 SynthDef(\snare, {
 	var snd;
-	snd = SinOsc.ar(210 * (1 + (1 *   Env.perc(0.001, 0.1).ar)) * [1, 1.75, 2.6, 4.3]);
+	snd = SinOsc.ar(210 * (1 + (1 *   Env.perc(0.001, 0.1).ar)) * [1, 1.75, 2.6, 3.4]);
 	snd = snd * Env.perc(0.001, [1, 0.3, 0.2, 0.1]).ar;
 	snd = snd.sum;
 	snd = snd + (BPF.ar(Hasher.ar(Sweep.ar), 2100,0.3) * -5.dbamp * Env.perc(0.05,0.3).ar);
@@ -48,7 +67,17 @@ SynthDef(\snare, {
 	snd = snd * (1+ (SinOsc.ar(1400) * -5.dbamp));
 	snd = snd * (1+ (SinOsc.ar(5000) * -10.dbamp));
 	snd = snd * Env.perc(0.001, 0.3, curve:-2).ar(Done.freeSelf);
-	snd = snd * \amp.kr(-15.dbamp);
+	snd = snd * \amp.kr(-18.dbamp);
+	snd = Pan2.ar(snd, \pan.kr(0));
+	Out.ar(\out.kr(0), snd);
+}).add;
+
+SynthDef(\saw, {
+	var snd;
+	snd = LFSaw.ar(\freq.kr(440) * (({LFNoise2.kr(0.5)} ! 10) * 0.5).midiratio, Rand(0,4));
+	snd = Splay.ar(snd);
+	snd = snd * Env.asr(0.05, 1, 0.05).ar(Done.freeSelf, \gate.kr(1));
+	snd = snd * \amp.kr(-22.dbamp);
 	snd = Pan2.ar(snd, \pan.kr(0));
 	Out.ar(\out.kr(0), snd);
 }).add;
@@ -63,41 +92,148 @@ SynthDef(\snare2, {
 	snd = Pan2.ar(snd, \pan.kr(0));
 	Out.ar(\out.kr(0), snd);
 }).add;
+
+SynthDef(\hh, {
+	var snd;
+	snd = WhiteNoise.ar();
+	snd = snd * Env.perc(0.001, 0.18, curve: -8).ar;
+	//snd = snd + LPF.ar(snd, 8000);
+	snd = snd + HPF.ar(snd, 5000);
+	snd = snd * \amp.kr(-5.dbamp);
+	snd = Pan2.ar(snd, \pan.kr(0));
+	Out.ar(\out.kr(0), snd);
+}).add;
+SynthDef(\hh2, {
+	var snd;
+	snd = WhiteNoise.ar();
+	snd = snd * Env.perc(0.001, 0.1, curve: -8).ar;
+	snd = LPF.ar(snd, 8000) + HPF.ar(snd, 12000);
+	snd = snd * \amp.kr(-5.dbamp);
+	snd = Pan2.ar(snd, \pan.kr(0));
+	Out.ar(\out.kr(0), snd);
+}).add;
 )
 
-Synth(\snare2)
+
+Synth(\hh2);
 
 Synth(\kick);
+Env.asr(0.001, 10,5, curve: -16).plot;
 
 (
-var s, bpm, beat;
+var s, bpm, beat, root;
 s = Server.default;
 bpm = 140;
 beat = 60 / bpm;
+root = 34;
 Routine({
+	Routine({
 	var bass;
-	loop {
-		s.bind {
-			Synth(\kick);
-			bass = Synth(\bass);
+		loop{
+			var time;
+			time = 0;
+			"X--X--X-........ ..XxX-xX......xx
+             X-------........ ..X-xx...x......
+             X-xx--X-........ ..Xx..xX.....xxx
+             X-----X-........ ..X-xx---x....x.".do { |character|
+				switch(character)
+				{ $X } {
+					s.bind {
+						var velocity;
+						velocity = [1.0, 0.1, 0.2, 0.1][time % 4];
+						if(bass.notNil){
+							bass.set(\gate, 0);
+						};
+						Synth(\kick, [\velocity: velocity]);
+						bass = Synth(\bass, [\velocity: velocity, freq: root.midicps]);
+				 	};
+					(beat/4).wait;
+					time = time +1;
+				}
+				{ $x } {
+					s.bind {
+						var velocity;
+						velocity = [1.0, 0.1, 0.2, 0.1][time % 4];
+						if(bass.notNil){
+							bass.set(\gate, 0);
+						};
+						Synth(\kick, [\velocity: velocity]);
+						 bass = Synth(\bass);
+					};
+					(beat / 4).wait;
+					time = time +1;
+				}
+				{ $- } {
+
+					(beat / 4).wait;
+					time = time +1;
+				}
+				{ $. } {
+					s.bind {
+						if(bass.notNil){
+							bass.set(\gate, 0);
+						};
+						bass = nil;
+					};
+					(beat/4).wait;
+					time = time +1;
+				};
+			};
 		};
-		(beat*2).wait;
-		s.bind{
-			bass.set(\gate, 0);
-			Synth (\snare);
+	}).play;
+
+	Routine({
+		loop{
+			"x-..-..-.-.x--..--..x---...-.".do { |character|
+				switch(character)
+				{ $x } {
+					s.bind {
+						Synth(\hh);
+					};
+					(beat / 4).wait;
+				}
+				{ $- } {
+					(beat / 4).wait;
+				}
+				{ $. } {
+					s.bind {
+						Synth(\hh2);
+					};
+					(beat/4).wait;
+				};
+			};
 		};
-		(beat*3).wait;
-		s.bind {
-			Synth(\kick);
-			bass = Synth(\bass);
+	}).play;
+
+	Routine({
+		loop {
+			(beat * 2).wait;
+			s.bind{
+				Synth (\snare);
+			};
+			(beat * 2).wait;
 		};
-		(beat * 1).wait;
-		s.bind{
-			bass.set(\gate, 0);
-			Synth(\snare);
+	}).play;
+	Routine({
+		var synth;
+		loop {
+			[3, 4].do{ |octave|
+				2.do{
+					(root + (12* octave) + [1,3,0, -5, 1,-2,1,0]).do{ |note|
+						s.bind{
+							synth = Synth (\saw, [\freq: note.midicps]);
+						};
+						(beat / 2).wait;
+						s.bind{
+							synth.set(\gate, 0);
+						};
+						(beat / 2).wait;
+					};
+				};
+			};
 		};
-		(beat *2).wait;
-	};
+	}).play;
 }).play;
+
 )
 
