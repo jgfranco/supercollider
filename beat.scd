@@ -1,9 +1,7 @@
-// https://www.youtube.com/watch?v=gsAxCuUcy0o     @32:19
+// https://www.youtube.com/watch?v=gsAxCuUcy0o     @35:01
 s.boot;
 s.quit;
-Synth(\kick);
 (
-
 SynthDef(\kick, {
 	var snd;
 	snd = SinOsc.ar((57) * (1+ (4 * Env.perc(0, 0.13, curve: -8).ar)) * XLine.ar(1,0.5, 1));
@@ -49,7 +47,7 @@ SynthDef(\bass, {
 	snd = LPF.ar(snd, 250) + HPF.ar(snd, 3000);
 	snd = HPF.ar(snd, freq) + SinOsc.ar(freq);
 	snd = snd * Env.asr(0.3, 1, 0.03).ar(Done.freeSelf, \gate.kr(1));
-	snd = snd * \amp.kr(-10.dbamp);
+	snd = snd * \amp.kr(-15.dbamp);
 	snd = Pan2.ar(snd, \pan.kr(0));
 	Out.ar(\out.kr(0), snd);
 }).add;
@@ -73,13 +71,17 @@ SynthDef(\snare, {
 }).add;
 
 SynthDef(\saw, {
-	var snd;
-	snd = LFSaw.ar(\freq.kr(440) * (({LFNoise2.kr(0.5)} ! 10) * 0.5).midiratio, Rand(0,4));
-	snd = Splay.ar(snd);
+	var snd, count, freq;
+	count = 10;
+	freq = \freq.kr(440) * Line.kr(\bend.kr(0), 0,0.3).midiratio;
+	snd = LFSaw.ar(freq * (({LFNoise2.kr(0.5)} ! count* 0.5) * 0.5).midiratio, { Rand(0,4) ! count});
+	snd = MoogFF.ar(snd,8000,0);
+
+	snd = Splay.ar(snd) * -10.dbamp;
 	snd = snd * Env.asr(0.05, 1, 0.05).ar(Done.freeSelf, \gate.kr(1));
-	snd = snd * \amp.kr(-22.dbamp);
+	snd = snd * \amp.kr(-20.dbamp);
 	snd = Pan2.ar(snd, \pan.kr(0));
-	Out.ar(\out.kr(0), snd);
+	Out.ar(\out.kr(0), snd)
 }).add;
 
 SynthDef(\snare2, {
@@ -94,8 +96,9 @@ SynthDef(\snare2, {
 }).add;
 
 SynthDef(\hh, {
-	var snd;
-	snd = WhiteNoise.ar();
+	var snd, velocity;
+	velocity = \velocity.kr(0.5);
+	snd = WhiteNoise.ar(1 * velocity);
 	snd = snd * Env.perc(0.001, 0.18, curve: -8).ar;
 	//snd = snd + LPF.ar(snd, 8000);
 	snd = snd + HPF.ar(snd, 5000);
@@ -104,8 +107,9 @@ SynthDef(\hh, {
 	Out.ar(\out.kr(0), snd);
 }).add;
 SynthDef(\hh2, {
-	var snd;
-	snd = WhiteNoise.ar();
+	var snd, velocity;
+	velocity = \velocity.kr(0.5);
+	snd = WhiteNoise.ar(1 * velocity);
 	snd = snd * Env.perc(0.001, 0.1, curve: -8).ar;
 	snd = LPF.ar(snd, 8000) + HPF.ar(snd, 12000);
 	snd = snd * \amp.kr(-5.dbamp);
@@ -114,16 +118,10 @@ SynthDef(\hh2, {
 }).add;
 )
 
-
-Synth(\hh2);
-
-Synth(\kick);
-Env.asr(0.001, 10,5, curve: -16).plot;
-
 (
 var s, bpm, beat, root;
 s = Server.default;
-bpm = 140;
+bpm = 135;
 beat = 60 / bpm;
 root = 34;
 Routine({
@@ -153,7 +151,7 @@ Routine({
 				{ $x } {
 					s.bind {
 						var velocity;
-						velocity = [1.0, 0.1, 0.2, 0.1][time % 4];
+						velocity = [0.5, 0.05, 0.1, 0.05][time % 4];
 						if(bass.notNil){
 							bass.set(\gate, 0);
 						};
@@ -183,23 +181,31 @@ Routine({
 	}).play;
 
 	Routine({
+
 		loop{
+			var time, velocity;
+			time = 0;
 			"x-..-..-.-.x--..--..x---...-.".do { |character|
+				velocity = [0.4, 0.1, 0.2, 0.1][time % 4];
+				//velocity.postln;
 				switch(character)
 				{ $x } {
 					s.bind {
-						Synth(\hh);
+						Synth(\hh, [\velocity: velocity]);
 					};
 					(beat / 4).wait;
+					time = time +1
 				}
 				{ $- } {
 					(beat / 4).wait;
+					time = time +1
 				}
 				{ $. } {
 					s.bind {
 						Synth(\hh2);
 					};
 					(beat/4).wait;
+					time = time +1
 				};
 			};
 		};
@@ -218,11 +224,18 @@ Routine({
 		var synth;
 		loop {
 			[3, 4].do{ |octave|
+				var first;
+				first = true;
 				2.do{
 					(root + (12* octave) + [1,3,0, -5, 1,-2,1,0]).do{ |note|
 						s.bind{
-							synth = Synth (\saw, [\freq: note.midicps]);
+							synth = Synth (\saw, [
+								freq: note.midicps,
+								bend: if(first, -6,0)
+
+							]);
 						};
+						first = false;
 						(beat / 2).wait;
 						s.bind{
 							synth.set(\gate, 0);
