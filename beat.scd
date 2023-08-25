@@ -1,4 +1,4 @@
-// https://www.youtube.com/watch?v=gsAxCuUcy0o     @35:01
+// https://www.youtube.com/watch?v=gsAxCuUcy0o     @39:19
 s.boot;
 s.quit;
 (
@@ -70,16 +70,28 @@ SynthDef(\snare, {
 	Out.ar(\out.kr(0), snd);
 }).add;
 
+SynthDef(\acid, {
+	var snd, freq;
+	freq = \freq.kr(440);
+	snd = SinOsc.ar(freq) * Env.perc(0.01, 0,3).ar * 1000;
+	snd = SinOsc.ar(freq);
+	snd = snd * Env.asr(0.001, 0.3, 0.01).ar(Done.freeSelf, \gate.kr(1));
+	snd = snd * \amp.kr(-10.dbamp);
+	snd = Pan2.ar(snd, \pan.kr(0));
+	Out.ar(\out.kr(0), snd);
+}).add;
+
 SynthDef(\saw, {
 	var snd, count, freq;
 	count = 10;
-	freq = \freq.kr(440) * Line.kr(\bend.kr(0), 0,0.3).midiratio;
+	freq = \freq.kr(440) * Line.kr(\bend.kr(0), 0,0.2).midiratio;
 	snd = LFSaw.ar(freq * (({LFNoise2.kr(0.5)} ! count* 0.5) * 0.5).midiratio, { Rand(0,4) ! count});
 	snd = MoogFF.ar(snd,8000,0);
 
 	snd = Splay.ar(snd) * -10.dbamp;
 	snd = snd * Env.asr(0.05, 1, 0.05).ar(Done.freeSelf, \gate.kr(1));
-	snd = snd * \amp.kr(-20.dbamp);
+	snd = snd + NHHall.ar(snd,inf,0, 200, 0.5, 8000, 1, 0.5, 0.5, 0.4, 0.4);
+	snd = snd * \amp.kr(-25.dbamp);
 	snd = Pan2.ar(snd, \pan.kr(0));
 	Out.ar(\out.kr(0), snd)
 }).add;
@@ -126,14 +138,56 @@ beat = 60 / bpm;
 root = 34;
 Routine({
 	Routine({
+	var synth;
+		loop{
+			var time;
+			time = 0;
+			"
+             ................ ............xxxx
+             ".do { |character|
+				switch(character)
+				{ $X } {
+					s.bind {
+						if(synth.notNil){
+							synth.set(\gate, 0);
+						};
+						synth = Synth(\acid, [ freq: root.midicps]);
+				 	};
+					(beat/4).wait;
+					time = time +1;
+				}
+				{ $x } {
+
+					(beat / 4).wait;
+					time = time +1;
+				}
+				{ $- } {
+
+					(beat / 4).wait;
+					time = time +1;
+				}
+				{ $. } {
+					s.bind {
+						if(synth.notNil){
+							synth.set(\gate, 0);
+						};
+						synth = nil;
+					};
+					(beat/4).wait;
+					time = time +1;
+				};
+			};
+		};
+	}).play;
+	Routine({
 	var bass;
 		loop{
 			var time;
 			time = 0;
-			"X--X--X-........ ..XxX-xX......xx
+			"X-xx--X-........ ..XxX-xX......xx
              X-------........ ..X-xx...x......
              X-xx--X-........ ..Xx..xX.....xxx
-             X-----X-........ ..X-xx---x....x.".do { |character|
+             X------X........ ..X-xx---x...xx.".do { |character|
 				switch(character)
 				{ $X } {
 					s.bind {
@@ -231,7 +285,7 @@ Routine({
 						s.bind{
 							synth = Synth (\saw, [
 								freq: note.midicps,
-								bend: if(first, -6,0)
+								bend: if(first, 6 * if(octave==3, 1,-1),0)
 
 							]);
 						};
