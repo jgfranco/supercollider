@@ -1,4 +1,4 @@
-// https://www.youtube.com/watch?v=gsAxCuUcy0o     @39:19
+// https://www.youtube.com/watch?v=gsAxCuUcy0o     @48:41
 s.boot;
 s.quit;
 (
@@ -70,16 +70,7 @@ SynthDef(\snare, {
 	Out.ar(\out.kr(0), snd);
 }).add;
 
-SynthDef(\acid, {
-	var snd, freq;
-	freq = \freq.kr(440);
-	snd = SinOsc.ar(freq) * Env.perc(0.01, 0,3).ar * 1000;
-	snd = SinOsc.ar(freq);
-	snd = snd * Env.asr(0.001, 0.3, 0.01).ar(Done.freeSelf, \gate.kr(1));
-	snd = snd * \amp.kr(-10.dbamp);
-	snd = Pan2.ar(snd, \pan.kr(0));
-	Out.ar(\out.kr(0), snd);
-}).add;
+
 
 SynthDef(\saw, {
 	var snd, count, freq;
@@ -128,7 +119,43 @@ SynthDef(\hh2, {
 	snd = Pan2.ar(snd, \pan.kr(0));
 	Out.ar(\out.kr(0), snd);
 }).add;
+
+
+
+
+/*
+SynthDef(\acid, {
+	var snd, freq;
+	freq = \freq.kr(440);
+	snd = Saw.ar(freq);
+	snd = MoogFF.ar(snd, XLine.kr(ExpRand(1000,8000), 1000, 0.1), 3);
+	snd = (snd * 3).tanh;
+	snd = MoogFF.ar(snd, XLine.kr(ExpRand(1000,8000), 0.1), 3);
+	snd = (snd * 1.5).tanh;
+	snd = snd * Env.asr(0.001, 1, 0.001).ar(Done.freeSelf, \gate.kr(1));
+	snd = snd * \amp.kr(-1.dbamp);
+	snd = Pan2.ar(snd, \pan.kr(0));
+	Out.ar(\out.kr(0), snd);
+}).add;
+*/
+
+SynthDef(\fm, {
+	var snd, freq;
+	snd = SinOsc.ar(ExpRand(1000,8000)) * Env.perc(0.001, ExpRand(0.001, 0.1)).ar * Rand(1000,8000);
+	snd = SinOsc.ar(ExpRand(1000,8000) + snd) * Env.perc(0.001, ExpRand(0.001, 0.1)).ar * Rand(1000,8000);
+	snd = SinOsc.ar(ExpRand(1000,8000) + snd);
+	snd = (snd * 10).fold2;
+	snd = MoogFF.ar(snd, 8000,0);
+	snd = snd * Env.adsr(0.001, 0.1, 0.0, 0.001).ar(Done.freeSelf, \gate.kr(1));
+	snd = snd * \amp.kr(-10.dbamp);
+	snd = Pan2.ar(snd, \pan.kr(0));
+	Out.ar(\out.kr(0), snd);
+}).add;
+
+
 )
+
+
 
 (
 var s, bpm, beat, root;
@@ -143,22 +170,20 @@ Routine({
 			var time;
 			time = 0;
 			"
-             ................ ............xxxx
+             x......xxxx..... .......x....xxxx
+             .x.xx.......xxxx xx..............
+             .....xxx...x.... ..xxx.......xxxx
+             x.x.........xxxx .....xx.xxxxx...
              ".do { |character|
 				switch(character)
-				{ $X } {
+				{ $x } {
 					s.bind {
 						if(synth.notNil){
 							synth.set(\gate, 0);
 						};
-						synth = Synth(\acid, [ freq: root.midicps]);
+						synth = Synth(\fm, [pan: 0.3 * [-1,1][time %2]]);
 				 	};
 					(beat/4).wait;
-					time = time +1;
-				}
-				{ $x } {
-
-					(beat / 4).wait;
 					time = time +1;
 				}
 				{ $- } {
