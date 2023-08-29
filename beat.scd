@@ -65,7 +65,7 @@ SynthDef(\snare, {
 	snd = snd * (1+ (SinOsc.ar(1400) * -5.dbamp));
 	snd = snd * (1+ (SinOsc.ar(5000) * -10.dbamp));
 	snd = snd * Env.perc(0.001, 0.3, curve:-2).ar(Done.freeSelf);
-	snd = snd * \amp.kr(-18.dbamp);
+	snd = snd * \amp.kr(-20.dbamp);
 	snd = Pan2.ar(snd, \pan.kr(0));
 	Out.ar(\out.kr(0), snd);
 }).add;
@@ -73,18 +73,18 @@ SynthDef(\snare, {
 
 
 SynthDef(\saw, {
-	var snd, count, freq;
+	/*var snd, count, freq;
 	count = 10;
-	freq = \freq.kr(440) * Line.kr(\bend.kr(0), 0,0.2).midiratio;
-	snd = LFSaw.ar(freq * (({LFNoise2.kr(0.5)} ! count* 0.5) * 0.5).midiratio, { Rand(0,4) ! count});
-	snd = MoogFF.ar(snd,8000,0);
+	freq = \freq.kr(440) * Line.kr(\bend.kr(0), 0.1,0.2).midiratio;
+	snd = LFSaw.ar(freq * (({LFNoise2.kr(0.6)} ! count* 0.5) * 0.5).midiratio, { Rand(0,4) ! count});
+	snd = MoogFF.ar(snd,Rand(6000),0);
 
 	snd = Splay.ar(snd) * -10.dbamp;
-	snd = snd * Env.asr(0.05, 1, 0.05).ar(Done.freeSelf, \gate.kr(1));
-	snd = snd + NHHall.ar(snd,inf,0, 200, 0.5, 8000, 1, 0.5, 0.5, 0.4, 0.4);
-	snd = snd * \amp.kr(-25.dbamp);
+	snd = snd * Env.asr(1, 1, 0.05).ar(Done.freeSelf, \gate.kr(1));
+	//snd = snd + NHHall.ar(snd,inf,0, 200, 0.5, 8000, 1, 0.5, 0.5, 0.4, 0.4);
+	snd = snd * \amp.kr(-15.dbamp);
 	snd = Pan2.ar(snd, \pan.kr(0));
-	Out.ar(\out.kr(0), snd)
+	Out.ar(\out.kr(0), snd)*/
 }).add;
 
 SynthDef(\snare2, {
@@ -141,12 +141,13 @@ SynthDef(\acid, {
 
 SynthDef(\fm, {
 	var snd, freq;
-	snd = SinOsc.ar(ExpRand(1000,8000)) * Env.perc(0.001, ExpRand(0.001, 0.1)).ar * Rand(1000,8000);
-	snd = SinOsc.ar(ExpRand(1000,8000) + snd) * Env.perc(0.001, ExpRand(0.001, 0.1)).ar * Rand(1000,8000);
+	snd = SinOsc.ar(ExpRand(1000,8000)) * Env.perc(0.001, ExpRand(0.001, 0.5)).ar * Rand(1000,8000);
+	snd = SinOsc.ar(ExpRand(1000,8000) + snd) * Env.perc(0.001, ExpRand(0.001, 0.5)).ar * Rand(1000,8000);
 	snd = SinOsc.ar(ExpRand(1000,8000) + snd);
 	snd = (snd * 10).fold2;
+	snd = snd.blend(Latch.ar(snd, Impulse.ar(ExpRand(8000,16000))), Rand(0,1));
 	snd = MoogFF.ar(snd, 8000,0);
-	snd = snd * Env.adsr(0.001, 0.1, 0.0, 0.001).ar(Done.freeSelf, \gate.kr(1));
+	snd = snd * Env.adsr(0.001, ExpRand(0.01, 0.5), 0.0, 0.001).ar(Done.freeSelf, \gate.kr(1));
 	snd = snd * \amp.kr(-10.dbamp);
 	snd = Pan2.ar(snd, \pan.kr(0));
 	Out.ar(\out.kr(0), snd);
@@ -158,9 +159,9 @@ SynthDef(\fm, {
 
 
 (
-var s, bpm, beat, root;
+var s, bpm, beat,  root;
 s = Server.default;
-bpm = 135;
+bpm = 128;
 beat = 60 / bpm;
 root = 34;
 Routine({
@@ -170,10 +171,10 @@ Routine({
 			var time;
 			time = 0;
 			"
-             x......xxxx..... .......x....xxxx
+             x......xxxx..... ..xx...x....xxxx
              .x.xx.......xxxx xx..............
              .....xxx...x.... ..xxx.......xxxx
-             x.x.........xxxx .....xx.xxxxx...
+             x.x.........xxxx .....xx.xxxxx..
              ".do { |character|
 				switch(character)
 				{ $x } {
@@ -209,7 +210,7 @@ Routine({
 		loop{
 			var time;
 			time = 0;
-			"X-xx--X-........ ..XxX-xX......xx
+			"X--x--X-........ ..XxX-xX......xx
              X-------........ ..X-xx...x......
              X-xx--X-........ ..Xx..xX.....xxx
              X------X........ ..X-xx---x...xx.".do { |character|
@@ -302,11 +303,12 @@ Routine({
 	Routine({
 		var synth;
 		loop {
-			[3, 4].do{ |octave|
+			[-1,0,1,2,3,4].do{ |octave|
 				var first;
 				first = true;
 				2.do{
-					(root + (12* octave) + [1,3,0, -5, 1,-2,1,0]).do{ |note|
+
+					(root + (12* octave) + [1,0,0,0,0,0,1,1]).do{ |note|
 						s.bind{
 							synth = Synth (\saw, [
 								freq: note.midicps,
