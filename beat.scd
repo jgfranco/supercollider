@@ -81,10 +81,10 @@ SynthDef(\saw, {
 
 	snd = Splay.ar(snd) * -10.dbamp;
 	snd = snd * Env.asr(1, 1, 0.05).ar(Done.freeSelf, \gate.kr(1));
-	//snd = snd + NHHall.ar(snd,inf,0, 200, 0.5, 8000, 1, 0.5, 0.5, 0.4, 0.4);
-	snd = snd * \amp.kr(-15.dbamp);
+	snd = snd + NHHall.ar(snd,inf,0, 200, 0.5, 8000, 1, 0.5, 0.5, 0.4, 0.4);
+	snd = snd * \amp.kr(-25.dbamp);
 	snd = Pan2.ar(snd, \pan.kr(0));
-	Out.ar(\out.kr(0), snd)*/
+	Out.ar(\out.kr(0), snd);*/
 }).add;
 
 SynthDef(\snare2, {
@@ -120,25 +120,6 @@ SynthDef(\hh2, {
 	Out.ar(\out.kr(0), snd);
 }).add;
 
-
-
-
-/*
-SynthDef(\acid, {
-	var snd, freq;
-	freq = \freq.kr(440);
-	snd = Saw.ar(freq);
-	snd = MoogFF.ar(snd, XLine.kr(ExpRand(1000,8000), 1000, 0.1), 3);
-	snd = (snd * 3).tanh;
-	snd = MoogFF.ar(snd, XLine.kr(ExpRand(1000,8000), 0.1), 3);
-	snd = (snd * 1.5).tanh;
-	snd = snd * Env.asr(0.001, 1, 0.001).ar(Done.freeSelf, \gate.kr(1));
-	snd = snd * \amp.kr(-1.dbamp);
-	snd = Pan2.ar(snd, \pan.kr(0));
-	Out.ar(\out.kr(0), snd);
-}).add;
-*/
-
 SynthDef(\fm, {
 	var snd, freq;
 	snd = SinOsc.ar(ExpRand(1000,8000)) * Env.perc(0.001, ExpRand(0.001, 0.5)).ar * Rand(1000,8000);
@@ -152,8 +133,6 @@ SynthDef(\fm, {
 	snd = Pan2.ar(snd, \pan.kr(0));
 	Out.ar(\out.kr(0), snd);
 }).add;
-
-
 )
 
 
@@ -161,7 +140,7 @@ SynthDef(\fm, {
 (
 var s, bpm, beat,  root;
 s = Server.default;
-bpm = 128;
+bpm = 130;
 beat = 60 / bpm;
 root = 34;
 Routine({

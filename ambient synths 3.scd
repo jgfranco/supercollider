@@ -52,17 +52,19 @@ SynthDef(\fx, {
 }).add;
 
 )
+       /* [0, 14, 15, 29, 31],
+		[3, 15, 24, 27],
+		[7, 14,  19, 26, 31],
+		[12, 14,  19, 22],
+		[9, 12, 14, 17],
+[3, 7, 12, 14, 15, 22, 24, 26]*/
 
 (
 Routine {
 	var frequencies, chords;
 	chords = [
 		[0, 14, 15, 29, 31],
-		[3, 15, 24, 27],
-		[7, 14,  19, 26, 31],
-		[12, 14,  19, 22],
-		[9, 12, 14, 17],
-		[3, 7, 12, 14, 15, 22, 24, 26]
+		[3, 7, 14, 15, 26]
 	];
 	Synth.tail(nil, \fx);
 
@@ -71,7 +73,7 @@ Routine {
 			rrand(2.0, 16.0).wait;
 			24.do {      // multiply freqencies.choose by a factor (e.g 4, to change octaves for the ping
 				if(frequencies.notNil){
-					Synth(\ping, [freq: frequencies.choose * 2, amp: -20.dbamp, pan: rrand(-1.0,1.0)]);
+					Synth(\ping, [freq: frequencies.choose * 4, amp: -20.dbamp, pan: rrand(-1.0,1.0)]);
 				};
 				exprand(0.1, 0.5).wait;
 			};
@@ -84,7 +86,7 @@ Routine {
 			rrand(5.0, 8.0).wait;
 			12.do {
 				if(frequencies.notNil){
-					Synth(\fm, [freq: frequencies.choose, amp: -20.dbamp, pan:rrand(-1.0, 1.0)]);
+					Synth(\fm, [freq: frequencies.choose *2, amp: -20.dbamp, pan:rrand(-1.0, 1.0)]);
 				};
 				exprand(0.1, 0.5).wait;
 			};
@@ -104,7 +106,7 @@ Routine {
 				} .play;
 				rrand(0.3, 1.0).wait;
 			};
-			rrand(5.0, 10.0).wait;
+			rrand(10.0, 15.0).wait;
 		};
 	};
 } .play;
