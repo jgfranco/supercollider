@@ -139,19 +139,25 @@ x = {
 x.release(4);
 
 
+s.reboot;
 (
-x.free;
-
+x.release(2);
 x = {
 	var sig;
-	var f;
-	f = {440 * 1.059463094359.pow(rrand(-12,12))} !5 ;
+	var f, notes, chord;
+
+	notes = [0, 2, 4, 6, 7, 9, 11];
+	chord = notes.scramble.keep(4);
+
+	f = {440 * (2.pow(1/12)).pow(notes[rrand(0,6)])} ! 4;
+	f.postln;
 	sig = SinOsc.ar(freq: f);
 	sig = Splay.ar(sig);
 	sig = sig * -30.dbamp;
 }.play;
-)
 
+
+)
 
 
 
