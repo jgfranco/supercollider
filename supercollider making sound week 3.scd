@@ -140,9 +140,13 @@ x.release(4);
 
 
 (
+x.free;
+
 x = {
 	var sig;
-	sig = SinOsc.ar(freq: {exprand(100, 4000)} ! 8);
+	var f;
+	f = {440 * 1.059463094359.pow(rrand(-12,12))} !5 ;
+	sig = SinOsc.ar(freq: f);
 	sig = Splay.ar(sig);
 	sig = sig * -30.dbamp;
 }.play;
