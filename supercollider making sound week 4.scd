@@ -113,8 +113,55 @@ x = {
 
 Done.freeSelf; // evaluates to 2
 
-// left at 38:10
+s.reboot;
+
+(
+x = {
+	arg gate = 1, da = 0;
+	var sig, env;
+	env = Env.new(
+		levels: [0,1, 0.2, 0],
+		times: [0.005, 0.25, 2],
+		curve: [-4, -1],
+		releaseNode: 2
+	).kr(da, gate);
+	sig = VarSaw.ar(freq: 300 +[0,1], width: 0.9);
+	sig = sig * env;
+	sig = sig * -20.dbamp;
+}.play();
+)
+
+x.set(\gate, 0, \da, 2);
+x.set(\gate, 1, \da, 0);
+
+
 // SynthDef & Synth
+
+
+(
+x = {
+	var sig;
+	sig = VarSaw.ar(freq: [300, 301],width: 0.9);
+	sig = sig * -20.dbamp;
+}.play;
+)
+
+
+
+
+(
+SynthDef.new(\jg, {
+	var sig;
+	sig = VarSaw.ar(freq: [300, 301],width: 0.9);
+	sig = sig * -20.dbamp;
+	Out.ar(\out.kr(0), sig)
+}).add;
+)
+
+x = Synth.new(\jg);
+x.release(1); // does not work
+
+
 
 
 
