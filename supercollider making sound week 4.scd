@@ -147,7 +147,7 @@ x = {
 )
 
 
-
+s.boot;
 
 (
 SynthDef.new(\jg, {
@@ -160,41 +160,3 @@ SynthDef.new(\jg, {
 
 x = Synth.new(\jg);
 x.release(1); // does not work
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
