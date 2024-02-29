@@ -270,11 +270,156 @@ Synth(\samp, [buf: ~marimba,  rate: ~pitchGen.next.midiratio]);
 		0.2.wait;
 	}
 };
-~synthGen = Routine(~synthFn);
+//~synthGen = Routine(~synthFn);
+~synthGen = ~synthFn.r; // this is the simplified version of the line above
 )
 
 ~synthGen.play;
 ~synthGen.reset;
 ~synthGen.stop;
 
-//left at 28:10
+(
+~synthFn = {
+	loop {
+		Synth(\samp, [buf: ~marimba,  rate: ~pitchGen.next.midiratio]);
+		0.2.wait;
+	}
+};
+//~synthGen = Routine(~synthFn);
+//~synthGen = ~synthFn.r; // this is the simplified version of the line above
+)
+
+
+// you can do this if you don't want to deal with reset.
+// You are basically creating a new instance everytime
+~synthGen = ~synthFn.r.play;
+~synthGen = Routine(~synthFn).play; // alternative to the line above
+~synthGen = r(~synthFn).play; // yet another alternative
+~synthGen.stop;
+
+// tempoClock
+TempoClock.default;
+
+TempoClock.default.tempo; // 1.0 bps beats per second
+TempoClock.default.beats;
+
+
+t.beats;
+t = TempoClock.new(98/60).permanent_(true);
+
+(
+
+~pitchFn = {
+	var note;
+	loop {
+		note = -12;
+		note.yield;
+		3.do{
+			note = note + [2, 5, 7].choose;
+			note.yield
+		};
+	};
+};
+
+~pitchGen = Routine(~pitchFn);
+
+~synthFn = {
+	loop {
+		Synth(\samp, [buf: ~marimba,  rate: ~pitchGen.next.midiratio]);
+		0.2.wait;
+	}
+};
+
+//~synthGen = r(~synthFn).play(TempoClock.default);
+~synthGen = r(~synthFn).play(t);
+)
+
+~synthGen.stop;
+t.tempo_(80/60); // method used to change tempo while live coding
+
+(
+~post = {t.beats.postln; 1;};
+t.schedAbs(t.nextBar, {~post.()});
+)
+
+~post = {}; // reset the function so the previous test stops
+
+
+(
+~pitchFn = {
+	var note;
+	loop {
+		note = -12;
+		note.yield;
+		3.do{
+			note = note + [2, 5, 7].choose;
+			note.yield
+		};
+	};
+};
+
+~pitchGen = Routine(~pitchFn);
+
+~synthFn = {
+	loop {
+		Synth(\samp, [buf: ~marimba,  rate: ~pitchGen.next.midiratio]);
+		0.5.wait;
+	}
+};
+
+//~synthGen = r(~synthFn).play(TempoClock.default);
+//~synthGen = r(~synthFn).play(clock: t, quant: [4, -1]); // see Quant class for more details on these parameters (quant, phase)
+~synthGen = r(~synthFn).play(clock: t, quant: Quant(4, 1));
+)
+
+~synthGen.stop;
+
+
+
+// quantization
+
+
+(
+~r0 = r{
+	loop {
+		Synth(\samp, [buf: ~marimba,  rate: [0, 3, 5].choose.midiratio, amp: 0.05]);
+		0.25.wait;
+	}
+}.play(t, quant:4);
+)
+
+~r0.stop;
+
+(
+~r1 = r{
+	loop {
+		Synth(\samp, [buf: ~marimba,  rate: [0, 3, 5, 7].choose.midiratio/2, amp: 0.2]);
+		0.5.wait;
+	}
+}.play(t, quant:4);
+)
+
+(
+~r2 = r{
+	loop {
+		Synth(\samp, [buf: ~marimba,  rate: 0.midiratio/4, amp: 0.5, rel: 1, sus: 0]);
+		0.75.wait;
+	}
+}.play(t, quant:4);
+)
+
+~r2.stop()
+
+(
+~r3= r{
+	loop {
+		Synth(\samp, [buf: ~marimba,  rate: [0, 3, 5, 7, 9, 10].choose.midiratio*2, amp: 0.1, rel: 0.2, sus: 0]);
+		0.25.wait;
+	}
+}.play(t, quant:4);
+)
+
+[~r0, ~r1, ~r2, ~r3].do{|r| r.stop;}
+~post = {};
+t.stop;
+
