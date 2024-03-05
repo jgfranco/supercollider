@@ -92,6 +92,8 @@ Event.eventTypes.keys.postln;
 (db: -5, pan: 1).play;
 (db: -5, pan: -1).play;
 
+s.boot;
+
 b = Buffer.read(s, "ceramic.wav".resolveRelative);
 
 (
@@ -122,7 +124,7 @@ SynthDef(\play, {
 Synth(\play, [buf:b]);
 Synth(\play, [buf: b, lpf: 5000, rq:0.1, rel: 1, rate: 5.midiratio]);
 
-(instrument: \play, buf: b, amp: 1, atk: 0.4).play;
+(instrument: \play, buf: b, amp: 1, atk: 0.001, rel: 5).play;
 
 (
 SynthDef(\saw, {
@@ -130,7 +132,7 @@ SynthDef(\saw, {
 	sig = Saw.ar(\freq.ir(200), mul: 0.5);
 	sig = RLPF.ar(
 		in: sig,
-		freq: \lpf.ir(2000).clip(20, 2000),
+		freq: \lpf.ir(1000).clip(20, 2000),
 		rq: \rq.ir(1);
 	);
 	sig = sig * Env.adsr().ar(2, \gate.kr(1));
@@ -141,10 +143,76 @@ SynthDef(\saw, {
 x = Synth(\saw, [amp: 0.6]);
 x.set(\gate, 0);
 
-(instrument: \saw, amp: 0.5).play; // Event silences the synth that would run indefinitely if invoked via Synth
-(instrument: \saw, amp: 0.5, sendGate: false).play; //
-(instrument: \saw, amp: 0.5, sustain: 0.32).play; //
+(instrument: \saw, amp: 0.2).play; // Event silences the synth that would run indefinitely if invoked via Synth
+(instrument: \saw, amp: 0.5, sendGate: false).play; // sendGate is the way an Event "silences" by default the synth, by setting it to false we get the same effect that running Synth produces
+(instrument: \saw, amp: 0.5, sustain: 3 ).play;
 
-//left at 41:04
+// Pbind - defines a sequence of events
+
+
+// this is just for showing how it works
+(
+~pat = Pbind(
+	\instrument, \saw,
+	\amp, 0.5,
+	\midinote, 60,
+	\sustain, 0.2
+);
+~seq = ~pat.asStream;
+)
+
+~seq.next(()).play; // input an empty event
+
+
+// on the other hand, this is how its usually used
+(
+~pat = Pbind(
+	\instrument, \saw,
+	\dur, 0.25,
+	\db, -10,
+	\midinote, Pwhite(50,70, inf),
+	\sustain, 0.2
+);
+~seq = ~pat.play;
+)
+
+~seq.stop;
+
+(
+~pat = Pbind(
+	\instrument, \saw,
+	\dur, 0.2,
+	\db, -10,       //D   E   F   G   A   B   C    D
+	\midinote, Prand([62, 64, 65, 67, 69, 71, 72, 74], inf),
+	\sustain, 0.2
+);
+~seq = ~pat.play;
+)
+
+
+t = TempoClock.new(108/60).permanent_(true);
+
+(
+~pat = Pbind(
+	\instrument, \play,
+	\rel, 0.5,
+	\buf, b,
+	\amp, 0.8,
+	\rate, Pseq([Pseries(0, -1, {[7,8,9].choose})], inf).midiratio,
+	\dur, Pseq([
+		Pseq([0.12], 6),
+		Pwhite(0.2, 2, 1)
+	], inf),
+	\lpf, Pseq([
+		Pgeom(5000, 0.5, 6),
+		Pseq([312.5], 1)
+	], inf),
+	\rq, 0.04
+);
+~seq = ~pat.play(t);
+)
+
+~seq.stop;
+
 
 
