@@ -11,7 +11,7 @@ SynthDef(\echo, {
 ).add;
 )
 
-Synth(\echo, [freq: rrand(45, 85).midicps, amp: 0.2]);
+Synth(\echo, [freq: rrand(65, 95).midicps, amp: 0.2]);
 
 
 (
@@ -75,9 +75,49 @@ SynthDef(\echo, {
 
 Synth(\echo, [in:19, out:0]);
 
-Synth(\src, [out: 19, freq: rrand(50,80).midicps]);
+Synth(\src, [out: 19, freq: rrand(65,85).midicps]);
+
+// using - like in the previous two lines - numbers for the busses can become quite complex if we have a large session with multiple synths and multiple effects. Thats why we have to introduce the Bus class, which handles busses for us
+
+s.freeAll;
+
+~toDelay = Bus.audio(s, 2);
+c = Bus.audio(s, 2);
+
+s.newBusAllocators; // resets the busses assigned via the Bus class
+
+Synth(\echo, [in:~toDelay, out:0]);
+
+Synth(\src, [out: ~toDelay, freq: [77, 78, 80,82, 84, 85, 87].choose.midicps]);
 
 
-// left at 18:55
+// Input/Output UGens
 
-// Input/Output UGens	
+// microphone signals
+
+
+// use headphones for the following excercise if using the computer mic and speaker
+(
+SynthDef(\mic, {
+	var sig;
+	//sig = In.ar(\in.ir(2), 1);
+	sig = SoundIn.ar(\in.ir(0));
+	sig = sig * \amp.kr(0.25);
+	sig = sig ! 2;
+	Out.ar(\out.ir(0), sig);
+}).add;
+)
+
+Synth(\echo, [in:~toDelay, out:0]);
+x = Synth(\mic, [out: ~toDelay, amp: 0.5]);
+x = free;
+s.scope;
+
+// how to configure the server input and output structure:
+
+s.options.numOutputBusChannels = 4;
+s.options.numInputBusChannels = 4
+s.reboot; // there's the need of rebooting the server so the changes take effect
+s.meter;
+
+// left at 30:31
