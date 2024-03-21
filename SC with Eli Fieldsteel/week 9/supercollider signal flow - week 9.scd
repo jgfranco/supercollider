@@ -120,4 +120,54 @@ s.options.numInputBusChannels = 4
 s.reboot; // there's the need of rebooting the server so the changes take effect
 s.meter;
 
-// left at 30:31
+s.boot;
+
+// Order of Exexution
+
+(
+SynthDef(\src, {
+	var sig, freq;
+	freq = LFNoise0.kr([7,8]).range(45,84).midicps;
+	sig = SinOsc.ar(freq);
+	sig = sig * Env.adsr().ar(2, \gate.kr(1));
+	sig = sig * \amp.ir(0.3);
+	Out.ar(\out.ir(0), sig);
+}).add;
+
+
+SynthDef(\echo, {
+	var sig;
+	sig = In.ar(\in.ir(0), 2); // this will read from 19 and 20
+	sig = sig + CombL.ar(sig, 0.2, 0.2, 4);
+	Out.ar(\out.ir(0), sig);
+}).add;
+)
+
+
+// if  you create the effect and then play the sound it should work just fine
+~fx = Synth(\echo, [in:~toDelay, out:0]);
+~src = Synth(\src, [out: ~toDelay]);
+
+// on the other hand, if you play the instrument that is routed to the effect and then run the effect, it does not play anything
+~src = Synth(\src, [out: ~toDelay]);
+~fx = Synth(\echo, [in:~toDelay, out:0]);
+
+
+~src.set(\gate, 0);
+~fx.free;
+
+// Groups, Targets, AddActions
+
+~fxgrp = Group.new;
+~srcgrp = Group.new;
+
+~fx = Synth(\echo, [in:~toDelay, out:0], ~fxgrp);
+~src = Synth(\src, [out: ~toDelay], ~srcgrp);
+
+~src.set(\gate, 0);
+~fx.free;
+
+~fxgrp.free;
+~srcgrp.free;
+
+// left at 44:17
