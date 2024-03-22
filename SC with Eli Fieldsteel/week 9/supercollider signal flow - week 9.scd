@@ -170,4 +170,53 @@ SynthDef(\echo, {
 ~fxgrp.free;
 ~srcgrp.free;
 
-// left at 44:17
+/////
+
+~src = Synth(\src, [out: ~toDelay]);
+~fx = Synth(\echo, [in:~toDelay, out:0],addAction: \addToTail);
+
+~src.set(\gate, 0);
+~fx.free;
+
+
+/////
+
+~src = Synth(\src, [out: ~toDelay]);
+~fx = Synth(\echo, [in:~toDelay, out:0],target: ~src, addAction: \addAfter);
+
+~src.set(\gate, 0);
+~fx.free;
+
+
+// Dry/wet mixing
+
+
+(
+SynthDef(\src, {
+	var sig, freq;
+	freq = LFNoise0.kr([7,8]).range(45,84).midicps;
+	sig = SinOsc.ar(freq);
+	sig = sig * Env.adsr().ar(2, \gate.kr(1));
+	sig = sig * \amp.ir(0.3);
+	Out.ar(\out.ir(0), sig);
+}).add;
+
+
+SynthDef(\echo, {
+	var sig, fx;
+	sig = In.ar(\in.ir(0), 2);
+	fx = CombL.ar(sig, 0.2, 0.2, 4);
+	sig = sig.blend(fx, \mix.kr(0.5));
+	Out.ar(\out.ir(0), sig);
+}).add;
+)
+
+~srcgrp = Group.new;
+~fxgrp = Group.after(~srcgrp);
+
+~src = Synth(\src, [out: ~toDelay], ~srcgrp);
+~fx = Synth(\echo, [in:~toDelay, out:0], ~fxgrp);
+~fx.set(\mix, 1);
+~srcgrp.set(\gate, 0);
+s.freeAll;
+
