@@ -40,8 +40,8 @@ s.scope; // open the stethoscope and see the control channels not the audio ones
 x = {Out.kr(3, SinOsc.kr(1))}.play;
 x.free;
 
-b = Bus.control(s, 4);
-b.setn([0, 0, 0, 0]);
+b = Bus.control(s,8);
+b.setn([0, 0, 0, 0, 0,0,0,0]);
 
 
 (
@@ -113,7 +113,7 @@ s.newBufferAllocators;
 
 SynthDef(\sin, {
 	var sig, trig;
-	trig = Impulse.kr(0.5);
+	trig = Impulse.kr(\impFreq.kr(0.5));
 	sig = SinOsc.ar(\freq.kr(1000) + [0, 5], mul: 0.2);
 	sig = sig * Env.perc().ar(0,trig);
 	Out.ar(\out.kr(0), sig);
@@ -131,12 +131,29 @@ SynthDef(\rev, {
 
 ~fx = Synth(\rev, [in: ~abus, out: 0], ~src, \addAfter);
 
-~src.set(\freq, 900);
+~src.set(\freq, ~kbus.asMap);
+
+~src.set(\freq, 400);
 
 ~src.free;
 
 ~fx.free;
 
+s.scope;
+s.reset;
+~lfo = {Out.kr(~kbus, SinOsc.kr(\freq.kr(12)).range(200,1200));}.play;
+~lfo.set(\freq, 60);
+~src.set(\impFreq, 0.5);
+~lfo.free;
 
+~impbus = Bus.control(s, 1);
+~src.set(\impFreq, ~impbus.asMap);
 
-//left at 16:35
+~impbus.value_(0.75);
+
+~imp = {Out.kr(~impbus, SinOsc.kr(\freq.kr(0.1)).range(0.1, 4));}.play;
+
+~imp.free;
+
+//left at 24:33
+
