@@ -155,5 +155,84 @@ s.reset;
 
 ~imp.free;
 
-//left at 24:33
+//Emulating an Analog Synthesizer
+s.boot;
 
+(
+s.newBusAllocators;
+
+~bus = (); // this is an event
+~bus.lfo = Bus.control(s, 1);
+~bus.trig = Bus.control(s, 1);
+~bus.env = Bus.control(s, 1);
+~bus.vco = Bus.audio(s, 1);
+~bus.vcf = Bus.audio(s, 1);
+~bus.vca = Bus.audio(s, 1);
+
+
+SynthDef(\lfo, {
+	var sig = SinOsc.kr(\freq.kr(1)).unipolar(1);
+	Out.kr(\out.kr(~bus.lfo), sig);
+}).add;
+
+SynthDef(\trig, {
+	var sig = Impulse.kr(\freq.kr(1));
+	Out.kr(\out.kr(~bus.trig), sig);
+}).add;
+
+
+SynthDef(\env, {
+	var sig = Env.perc(\atk.kr(0.001), \rel.kr(0.5)
+	).kr(0, \trig.kr(0));
+	sig = sig * \amp.kr(1);
+	Out.kr(\out.kr(~bus.env), sig);
+}).add;
+
+
+//oscillator
+SynthDef(\vco, {
+	var sig = Saw.ar(
+		\freq.kr(0.1).linexp(0,1, \fmin.kr(20), \fmax.kr(20000))
+	);
+	Out.kr(\out.kr(~bus.vco), sig);
+}).add;
+
+SynthDef(\vcf, {
+	var sig = In.ar(\in.kr(~bus.vco), 1);
+	sig = MoogFF.ar(
+		in: sig,
+		freq: \freq.kr(1).linexp(0, 1, \fmin.kr(20), \fmax.kr(15000)),
+		gain: 2
+	);
+	Out.kr(\out.kr(~bus.vcf), sig);
+}).add;
+
+SynthDef(\vca, {
+	var sig = In.ar(\in.kr(~bus.vcf), 1);
+	sig = sig * \amp.kr(1);
+	Out.ar(\out.kr(~bus.vca), sig);
+}).add;
+
+SynthDef(\rev, {
+	var sig = In.ar(~bus.vca, 1);
+	sig = sig.blend(
+		LPF.ar(GVerb.ar(sig, 200, 4), \lpf.kr(1200)),
+		\mix.kr(0.2)
+	);
+
+	Out.ar(\out.kr(0), sig);
+}).add;
+)
+
+(
+~lfo = Synth(\lfo);
+~trig = Synth.after(~lfo, \trig);
+~env = Synth.after(~trig, \env);
+~vco = Synth.after(~env, \vco);
+~vcf = Synth.after(~vco, \vcf);
+~vca = Synth.after(~vcf, \vca);
+~rev = Synth.after(~vca, \rev);
+)
+s.reboot;
+
+// i was checking around 27:12 because my version is not producing sound
