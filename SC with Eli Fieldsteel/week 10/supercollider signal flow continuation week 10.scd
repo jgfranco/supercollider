@@ -105,7 +105,7 @@ SynthDef(\rev, {
 
 
 (
-s.newBufferAllocators;
+s.newBusAllocators;
 ~abus = Bus.audio(s, 2);
 ~kbus = Bus.control(s, 1);
 
@@ -160,7 +160,6 @@ s.boot;
 
 (
 s.newBusAllocators;
-
 ~bus = (); // this is an event
 ~bus.lfo = Bus.control(s, 1);
 ~bus.trig = Bus.control(s, 1);
@@ -182,7 +181,8 @@ SynthDef(\trig, {
 
 
 SynthDef(\env, {
-	var sig = Env.perc(\atk.kr(0.001), \rel.kr(0.5)
+	var sig = Env.perc(
+		\atk.kr(0.001), \rel.kr(0.5)
 	).kr(0, \trig.kr(0));
 	sig = sig * \amp.kr(1);
 	Out.kr(\out.kr(~bus.env), sig);
@@ -192,9 +192,9 @@ SynthDef(\env, {
 //oscillator
 SynthDef(\vco, {
 	var sig = Saw.ar(
-		\freq.kr(0.1).linexp(0,1, \fmin.kr(20), \fmax.kr(20000))
+		\freq.kr(0.1).linexp(0, 1, \fmin.kr(20), \fmax.kr(20000))
 	);
-	Out.kr(\out.kr(~bus.vco), sig);
+	Out.ar(\out.ar(~bus.vco), sig);
 }).add;
 
 SynthDef(\vcf, {
@@ -204,7 +204,7 @@ SynthDef(\vcf, {
 		freq: \freq.kr(1).linexp(0, 1, \fmin.kr(20), \fmax.kr(15000)),
 		gain: 2
 	);
-	Out.kr(\out.kr(~bus.vcf), sig);
+	Out.ar(\out.kr(~bus.vcf), sig);
 }).add;
 
 SynthDef(\vca, {
@@ -233,6 +233,51 @@ SynthDef(\rev, {
 ~vca = Synth.after(~vcf, \vca);
 ~rev = Synth.after(~vca, \rev);
 )
+
+~freqspec = \freq.asSpec;
+~freqspec.map(1);
+~freqspec.unmap(440);
+
+~vca.set(\amp, 0.dbamp);
+
+~vcf.set(\freq, 0.7);
+
+~vco.set(\freq, ~freqspec.unmap(67.midicps));
+69.midicps;
+//
+~vco.set(\freq, ~freqspec.unmap([59,60,62,64,65,67,69].choose.midicps));
+
+
+s.record();
+(
+~vco.set(\freq, ~freqspec.unmap(exprand(40, 440).round(40)));
+~rev.set(\mix, exprand(0.2, 0.9));
+)
+
+s.makeWindow;
+
+~vcf.set(\freq, 0.6);
+~rev.set(\mix,1);
+
+~vca.set(\amp, ~bus.env.asMap);
+~env.set(\trig, 1);
+~env.set(\trig, 0);
+
+~env.set(\trig, ~bus.trig.asMap);
+~trig.set(\freq, 20);
+
+~env.set(\rel, 0.2);
+~env.set(\atk, 0.001);
+
+~vcf.set(\freq, ~bus.lfo.asMap);
+~vcf.set(\fmin, 500);
+~vcf.set(\fmax, 4000);
+
+~lfo.set(\freq, 0.1);
+~vco.set(\freq, 0.1);
+
+s.scope;
+s.freqscope;
 s.reboot;
 
-// i was checking around 27:12 because my version is not producing sound
+
