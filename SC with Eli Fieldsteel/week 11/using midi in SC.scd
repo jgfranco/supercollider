@@ -75,7 +75,8 @@ s.newBusAllocators;
 (MIDIdef.cc(\cf, {
 	arg val,num;
 	~cfbus.value_(val/127);
-}, ccNum: 21)
+}, ccNum: 21) // 21 is the ccNum that my launchkey mini gave me when I "listened"
+//with MIDIfunc.trace(true);
 )
 
 s.scope;
@@ -92,5 +93,47 @@ SynthDef(\saw, {
 }).add;
 )
 
+MIDIdef(\note).disable;
+MIDIdef(\note).enable;
 
-// left at 25:20
+MIDIFunc.trace(false);
+
+
+//this next poriton deals with the samples
+MIDIdef.freeAll;
+
+Synth(\samp, [buf:b.sna, amp:0.5]);
+
+b.size;
+
+s.reboot;
+
+
+
+MIDIIn.connectAll;
+(
+MIDIdef.noteOn(\samp, {
+
+	arg val, num;
+	var buffer;
+	[val,num].postln;
+	buffer = switch(num)
+	{36} {b.kick}
+	{38} {b.snare2}
+	{40} {b.hh}
+	{41} {b.hh2}
+	{43} {b.stick}
+	{45} {b.sticks}
+	{true} {nil};
+	if(buffer.notNil){
+		Synth(\samp, [buf: buffer]);
+	}
+});
+)
+
+
+//left at 36:45
+
+
+
+ 
