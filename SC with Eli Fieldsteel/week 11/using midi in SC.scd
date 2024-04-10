@@ -33,7 +33,7 @@ b.keys;
 b.stick.play;
 
 MIDIIn.connectAll; // to connect devices
-MIDIFunc.trace(true); // to track midi input
+MIDIFunc.trace(false); // to track midi input
 
 (
 MIDIdef.noteOn(\note, {
@@ -48,21 +48,49 @@ MIDIdef.noteOn(\note, {
 	//[val, num, chan, src].postln;
 	arg val, num;
 	[val, num].postln;
-	Synth(\saw, [freq: num.midicps, amp: val/127]);
+	Synth(\saw, [freq: num.midicps, amp: val/127, rel:3]);
 
 });
 )
 
+
 ~notes = Array.newClear(128);
-(m
+(
 MIDIdef.noteOn(\note, {
 	arg val, num; // val is velocity, num is midi value
-	//[val, num].postln;
-	~notes.at(num) = Synth(\saw, [
+	[val, num].postln;
+	~notes.at(num)=Synth(\saw, [
 		freq: num.midicps,
-		amp: val.linlin(0,127, -40,-6).dbamp
+		amp: val.linlin(0,127, -40,-6).dbamp,
 	]);
 });
 )
 
-//left at 18:11 
+
+(
+s.newBusAllocators;
+~cfbus = Bus.control(s, 1);
+)
+
+(MIDIdef.cc(\cf, {
+	arg val,num;
+	~cfbus.value_(val/127);
+}, ccNum: 21)
+)
+
+s.scope;
+(
+SynthDef(\saw, {
+	var sig, env, cf;
+	cf = In.kr(\in.kr(~cfbus),1);
+	cf = cf.linexp(0,1, 30,15000);
+	env = Env([0,1,0], [0.001, \rel.ir(1)], [0, -10]).kr(2);
+	sig = Saw.ar(\freq.ir(50)) ! 2;
+	sig = LPF.ar(sig, cf);
+	sig = sig * \amp.ir(0.2) * env;
+	Out.ar(\out.ir(0), sig);
+}).add;
+)
+
+
+// left at 25:20
