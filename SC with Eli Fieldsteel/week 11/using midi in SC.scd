@@ -102,12 +102,21 @@ MIDIFunc.trace(false);
 //this next poriton deals with the samples
 MIDIdef.freeAll;
 
-Synth(\samp, [buf:b.sna, amp:0.5]);
+Synth(\samp, [buf:b.snare, amp:0.5]);
 
 b.size;
 
 s.reboot;
 
+(
+b = ();
+PathName("samples/".resolveRelative).entries.collect({
+	|path|
+	path.fileNameWithoutExtension.postln;
+	b[path.fileNameWithoutDoubleExtension.asSymbol] = Buffer.read(s, path.fullPath);
+	path.fullPath.postln;
+})
+)
 
 
 MIDIIn.connectAll;
@@ -116,7 +125,7 @@ MIDIdef.noteOn(\samp, {
 
 	arg val, num;
 	var buffer;
-	[val,num].postln;
+	//[val,num].postln;
 	buffer = switch(num)
 	{36} {b.kick}
 	{38} {b.snare2}
@@ -131,9 +140,41 @@ MIDIdef.noteOn(\samp, {
 });
 )
 
+(
+~dirbus = Bus.control(s, 1);
+)
 
-//left at 36:45
+(
+MIDIdef.cc(\dir, {
+	arg val;
+	if(val >= 64) {~dirbus.value_(1)} {~dirbus.value_(-1)};
+
+}, ccNum: 22)
+)
+
+s.scope;
+(
+SynthDef(\samp, {
+	var sig, buf = \buf.ir(0), rate, spos;
+	rate = In.kr(\in.kr(~dirbus), 1);
+	spos = Select.kr(rate.linlin(-1, 1, 0,1), [
+		BufFrames.ir(buf) -2,
+		0
+	]);
+	[rate, spos].poll;
+	sig = PlayBuf.ar(
+		2,
+		buf,
+		BufRateScale.ir(buf) * rate,
+		1,
+		\spos.ir(0),
+		doneAction: 2
+	);
+	sig = sig * \amp.ir(0.2);
+	Out.ar(\out.ir(0), sig);
+}).add;
+)
 
 
-
+Synth(\samp, [buf:b.hh, spos: b.hh.numFrames -2, rate:-1]);
  
