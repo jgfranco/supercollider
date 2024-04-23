@@ -1,9 +1,11 @@
 s.scope;
 s.boot;
+s.reboot;
+s.makeWindow;
+
 //synths
 (
-                           // \B3, 257, \C4, 262, \D4, 294, \E4, 330, \F4, 349, \G4, 392, \A4, 440, \B4, 494, \C5, 523, \D5, 587, \D2, 73, \E2, 82,\F2,87, \G2, 98
-~scale = Dictionary.newFrom([ \B3, 258, \C4, 261, \D4, 293, \E4, 331, \F4, 348, \G4, 391, \A4, 439, \B4, 495, \C5, 522, \D5, 586, \D2, 72.5, \E2, 82.5,\F2,86.5, \G2, 98.5
+~scale = Dictionary.newFrom([ \Fs4, 369.99, \Gs4, 415.3, \A4, 439, \As4, 466.16, \B4, 493.88, \Cs5, 554.37, \D5, 587.33, \E5, 659.25, \Fs2, 739.99, \D2, 739.99, \E2, 82.41,\Fs2, 92.5, \A2, 110, \B2, 123.47
 ]);
 
 s.newBusAllocators;
@@ -11,10 +13,11 @@ s.newBusAllocators;
 ~toReverb = Bus.audio(s, 2);
 ~dbus = Bus.control(s, 1);
 ~pbus = Bus.control(s, 1);
-~osc1mix = 0.5;                                     // 1
-~osc2mix = 0;                                       // 0.5
-~osc3mix = 0;                                       // 1
-~filter = 5000;                                    //5000
+~osc1mix = 1;
+~osc2mix = 0.5;
+~osc3mix = 1;
+~filter = 20000;
+
 
 SynthDef(\synth, {
 	var sig, buf = \buf.ir(0);
@@ -38,8 +41,6 @@ SynthDef(\bass, {
 	Out.ar(\out.ir(0), sig);
 }).add;
 
-
-
 //FX
 SynthDef(\echo, {
 	var sig;
@@ -53,8 +54,7 @@ SynthDef(\echo, {
 SynthDef(\rev, {
 	var sig = In.ar(\in.ir(0), 2);
 	sig = JPverb.ar(sig, t60: 5, damp: \damp.kr(0.8), size: \size.kr(5),lowcut: \lc.kr(500), highcut: \hc.kr(20000));
-	//sig = sig * \amp.kr(1);
-	sig = Pan2.ar(sig, \pan.ir(0), \amp.ir(1));
+	sig = sig * \amp.kr(0.5);
 	Out.ar(\out.ir(0), sig);
 }).add;
 
@@ -62,16 +62,26 @@ SynthDef(\rev, {
 //
 SynthDef(\lfo, {
 	var sig;
-	sig = SinOsc.kr(0.1).exprange(0.1, 0.15);
+	sig = SinOsc.kr(0.1).exprange(0.1, 0.12);
 	Out.kr(\out.kr(0), sig);
 }).add;
 //pitch
 SynthDef(\lfo2, {
 	var sig;
-	sig = SinOsc.kr(0.25).bipolar(1);
+	sig = SinOsc.kr(1).bipolar(1);
 	Out.kr(\out.kr(0), sig);
 }).add;
 
+(
+SynthDef(\mic, {
+	var sig;
+	sig = In.ar(\in.ir(2), 1);
+	sig = LPF.ar(sig, 4000);
+	sig = sig * \amp.kr(0.25);
+	sig = sig ! 2;
+	Out.ar(\out.ir(0), sig);
+}).add;
+)
 )
 
 
@@ -80,13 +90,20 @@ SynthDef(\lfo2, {
 (
 ~lfo = Synth(\lfo, [out: ~dbus]);
 ~lfo2 = Synth(\lfo2, [out: ~pbus]);
-~reverb = Synth(\rev, [in: ~toReverb, out:0, pan: ~pbus.asMap]);
+~reverb = Synth(\rev, [in: ~toReverb, out:0]);
 ~echo = Synth(\echo, [in: ~toDelay, out:0, \dly: ~dbus.asMap]);
+//~mic = Synth(\mic, [out: 0, amp: 1]);
 )
 
 
-~bass.mute;
+//RUN
+(
+~rand = ~pat0.play;
+~arp = ~pat1.play;
+~bass  = ~pat2.play;
+)
 
+~bass.mute;
 ~bass.unmute;
 ~arp.mute;
 ~arp.unmute;
@@ -98,29 +115,22 @@ SynthDef(\lfo2, {
 ~pat0 = Pbind(
 	\instrument, \synth,
 	\dur, 0.15,
-	\db, Pexprand(-30, -25, inf),
-	\freq, Pwrand([~scale.at(\E4), ~scale.at(\F4), ~scale.at(\G4), ~scale.at(\A4) ]*2, [10,10, 10, 5].normalizeSum, inf),
+	\db, Pexprand(-30, -15, inf),
+	\freq, Prand([~scale.at(\E5), ~scale.at(\Fs4), ~scale.at(\Gs4)], inf),
 	\pan, Prand([-1, -0.8,-0.6, 0.6,0.8, 1], inf),
-	\sustain, Pexprand(0.01, 0.5, inf),
+	\sustain, Pexprand(0.01, 1.0, inf),
 	\lpf, Pexprand(5000, 10000, inf),
-	\out, Pwrand([0, 2, Prand([~toDelay, ~toReverb], 1)], [1,10,2].normalizeSum, inf);
+	\out, Pwrand([~toDelay, 0, 2, ~toReverb], [1,10, 10,1].normalizeSum, inf);
 );
 ~rand = ~pat0.play;
-
-
 
 // arp lead
 ~pat1 = Pbind(
 	\instrument, \synth,
-	\dur, 0.3,
+	\dur, 1,
 	\db, Pexprand(-30, -15, inf),
-	\freq, (Pseq([
-		Pseq([~scale.at(\D4), Prand([~scale.at(\C5), ~scale.at(\A4)], 1), ~scale.at(\F4)], 5),
-		Pseq([~scale.at(\C4), Prand([~scale.at(\G4),~scale.at(\A4)], 1), ~scale.at(\F4)],7),
-		Pseq([Pwrand([~scale.at(\F4), ~scale.at(\G4)], [7, 3], 1), ~scale.at(\F4), ~scale.at(\D4)], 3),
-		Pseq([~scale.at(\G4), ~scale.at(\F4), Pwrand([~scale.at(\C4), ~scale.at(\B3)], [6, 5], 1), ~scale.at(\F4)], 5)
-	],inf)),
-	\sustain, Pexprand(0.2, 0.4, inf),
+	\freq,Pseq([~scale.at(\Cs5), ~scale.at(\Fs4)], inf) ,
+	\sustain, 0.2,
 	\lpf, Pexprand(1000, 20000, inf),
 	\pan, Prand([-0.3,-0.2, -0.1 , 0.1, 0.2, 0.3], inf),
 	\out, Pwrand([~toDelay, 0, 2, ~toReverb], [1,30,5, 1].normalizeSum, inf);
@@ -131,29 +141,15 @@ SynthDef(\lfo2, {
 //bass
 ~pat2 = Pbind(
 	\instrument, \bass,
-	\dur, Pseq([
-		Pseq([0.6], 32),
-		Pseq([0.3], 1)
-	],inf),
+	\dur, 4,
 	\db, Pexprand(-20, -10, inf),
-	\freq, Pseq([
-		Pseq([~scale.at(\D2)], 32),
-		Pseq([~scale.at(\D2)], 8),
-		Pseq([~scale.at(\F2)], 8),
-		Pseq([~scale.at(\D2)], 8),
-		Pseq([~scale.at(\F2)], 8),
-		Pseq([
-			Pseq([~scale.at(\D2)], 8),
-			Pseq([~scale.at(\F2)], 8),
-		Pseq([~scale.at(\E2)], 8),
-			Pseq([~scale.at(\G2)], 8);], inf)
-	],inf),
-	\sustain, Pexprand(0.1, 0.2, inf),
+	\freq, ~scale.at(\Fs2),inf),
+	\sustain, 0.1,
 	\pan, 0,
 	\out, 0;
  );
 ~bass  = ~pat2.play;
-~bass.mute;
 )
+
 
 
