@@ -77,6 +77,6 @@ n.resume;
 
 m.source_({ Impulse.ar([9, 9.1], mul: 0.5) * SinOsc.kr(0.2, 3pi/2).exprange(0.1, 1)});
 
-// left at 22.28
+
 
 
