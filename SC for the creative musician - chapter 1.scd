@@ -64,3 +64,18 @@ pick = bag.wchoose([750, 220, 30].normalizeSum);
 
 rrand(40, 90).dup(8); // does not quite work
 {rrand(40,90)}.dup(8); // this is the right way
+
+// iteration
+
+[30, 40, 50, 60].do({"this is a test".postln});
+4.do({"this is a test".postln});
+[30, 40, 50, 60].do({|item, index|[item, index].postln});
+
+//iteration methods
+
+x = [101, 102, 103, 104, 105, 106, 107];
+x.select({ |n| n.isPrime });
+x.detect({ |n| n.isPrime });
+x.any({ |n| n.isPrime });
+x.every({ |n| n.isPrime });
+x.count({ |n| n.isPrime });
