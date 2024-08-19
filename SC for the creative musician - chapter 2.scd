@@ -31,4 +31,65 @@ x = { |freq = 300|
 }.play;
 )
 
-x.set(\freq, 440);
+x.set(\freq, 660);
+
+(
+
+// define the sound
+f = { |freq = 440, amp= 0.1|
+	SinOsc.ar(freq, mul: amp) !2;
+};
+)
+
+x = f.play;
+
+x.set(\freq, 660, \amp, 0.5);
+
+f.set(\freq, 880, \amp, 0.3); // no effect if applied to function
+
+
+x = f.play(args: [freq: 800, amp: 0.2]); //override default arguments
+y = f.play(args: [freq: 440, amp: 0.5]); //
+
+x.free; // use of free to stop a specific sound
+
+y.release(2); //gentler stop
+
+// using addition to mix a sine wave with pink noise
+
+(
+x = {
+	var sig;
+	sig = SinOsc.ar(freq: 300, mul: 0.5);
+	sig = sig + PinkNoise.ar(mul: 0.01);
+	sig = sig ! 2;
+}.play;
+)
+
+x.release(2);
+
+// using binary operators as an alternative to specifying mul and add
+
+(
+x = {
+	var sig;
+	sig = SinOsc.ar(freq: 300) * 0.15;
+	sig = sig + (PinkNoise.ar * 0.01);
+	sig = sig ! 2;
+}.play;
+)
+
+x.release(2);
+
+// modulating amplitude of pink noise with a LFO
+
+(
+x = {
+	var sig, lfo;
+	lfo = SinOsc.kr(freq:1/5, phase: 3pi/2, mul: 0.1, add: 0.1);
+	sig = PinkNoise.ar * lfo;
+	sig = sig !2;
+}.play;
+)
+
+x.release(2);
