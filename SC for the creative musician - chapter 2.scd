@@ -93,3 +93,47 @@ x = {
 )
 
 x.release(2);
+
+// use of range to speficy custom ouput boundaries of a UGEN
+// (we avoid defining mul and add)
+
+s.boot;
+s.quit;
+(
+x = {
+	var sig, lfo;
+	lfo = SinOsc.kr(freq: 0.2, phase: 3pi/2).range(0, 0.2);
+	sig = PinkNoise.ar * lfo;
+	sig = sig !2;
+}.play;
+)
+
+x.release(2);
+
+// range mapping methods
+// range, exprange, curverange, unipolar, bipolar
+
+
+
+// usage of Line AND XLine as simple amplitude envelopes
+
+(
+{
+	var sig, env;
+	env = Line.kr(start: 0.3, end: 0, dur: 0.5);
+	sig = SinOsc.ar(350) * env;
+	sig = sig !2;
+}.play;
+)
+
+(
+{
+	var sig, env;
+	env = XLine.kr(start: 0.3, end: 0.0001, dur: 0.5); // XLine cannot end on 0
+	sig = SinOsc.ar(350) * env;
+	sig = sig !2;
+}.play;
+)
+
+
+
