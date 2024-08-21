@@ -120,7 +120,7 @@ x.release(2);
 (
 {
 	var sig, env;
-	env = Line.kr(start: 0.3, end: 0, dur: 0.5);
+	env = Line.kr(start: 0.3, end: 0, dur: 0.35);
 	sig = SinOsc.ar(350) * env;
 	sig = sig !2;
 }.play;
@@ -129,11 +129,74 @@ x.release(2);
 (
 {
 	var sig, env;
-	env = XLine.kr(start: 0.3, end: 0.0001, dur: 0.5); // XLine cannot end on 0
+	env = XLine.kr(start: 0.5, end: 0.0001, dur: 0.8); // XLine cannot end on 0
+	sig = SinOsc.ar(350) * env;
+	sig = sig !2;
+}.play;
+)
+
+s.boot;
+
+// introducing doneAction. A doneAction 2 tells the server to destroy the synth after it finishes playing it
+(
+{
+	var sig, env;
+	env = XLine.kr(start: 0.5, end: 0.0001, dur: 0.8, doneAction: 2); // XLine cannot end on 0
 	sig = SinOsc.ar(350) * env;
 	sig = sig !2;
 }.play;
 )
 
 
+// Env and EnvGen
 
+(
+e = Env.new(
+	levels: [0,1,0],
+	times: [1,3],
+	curve: [0,0]
+);
+e.plot;
+)
+
+// usage of Env and EnvGen to create a custom amplitude envelope signal
+
+(
+{
+	var sig, env;
+	env = EnvGen.kr(
+		envelope: Env.new(
+			levels: [0,1,0],
+			times: [1,3],
+			curve:[0,0]),
+		doneAction: 2
+	);
+	sig = SinOsc.ar(350) * 0.3;
+	sig = sig * env;
+	sig = sig !2;
+}.play;
+)
+
+// using a gate to scope a Envelope with an indifinite duration
+
+(
+f = { |gate = 1|
+	var sig, env;
+	env = EnvGen.kr(
+		envelope: Env.new(
+			levels: [0, 1, 0.2, 0],
+			times: [0.02, 0.3, 1],
+			curve: [0, -1, -4],
+			releaseNode: 2
+		),
+		gate: gate,
+		doneAction: 2
+	);
+	sig = SinOsc.ar(350) * 0.3;
+	sig = sig * env;
+	sig = sig ! 2;
+};
+)
+
+x = f.play;
+x.set(\gate, 0);
