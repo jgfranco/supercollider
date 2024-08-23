@@ -200,3 +200,52 @@ f = { |gate = 1|
 
 x = f.play;
 x.set(\gate, 0);
+
+
+// A retriggerable gated envelope
+
+(
+f = { |gate = 1|
+	var sig, env;
+	env = EnvGen.kr(
+		Env.new(
+			[0, 1, 0.2, 0],
+			[0.02, 0.3, 1],
+			[0, -1, -4],
+			2
+		),
+		gate
+	);
+	sig = SinOsc.ar(350) * 0.3;
+	sig = sig * env;
+	sig = sig !2;
+};
+)
+
+x = f.play;
+x.set(\gate, 0); // fade to silence but do not free
+x.set(\gate, 1); // reopen the gate to restart the envelope
+x.set(\gate, 0); // fade to silence again
+x.free; // free when finished
+
+// use of trigger-type arguments to create a retriggerable fixed-duration envelope
+
+(
+x = { |t_gate = 0|
+	var sig, env;
+	env = EnvGen.kr(
+		Env.new(
+			[0, 1, 0],
+			[0.02, 0.3],
+			[0, -4],
+		),
+		t_gate
+	);
+	sig = SinOsc.ar(350) * 0.3;
+	sig = sig * env;
+	sig = sig !2;
+}.play;
+)
+
+x.set(\t_gate,1); // evaluate repeatedly
+x.free;
