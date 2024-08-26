@@ -229,7 +229,7 @@ x.set(\gate, 0); // fade to silence again
 x.free; // free when finished
 
 // use of trigger-type arguments to create a retriggerable fixed-duration envelope
-
+s.boot;
 (
 x = { |t_gate = 0|
 	var sig, env;
@@ -249,3 +249,26 @@ x = { |t_gate = 0|
 
 x.set(\t_gate,1); // evaluate repeatedly
 x.free;
+
+// multichannel expansion
+s.meter;
+
+{SinOsc.ar(300, mul:0.1)}.play;
+{SinOsc.ar(300, mul:0.1) !2}.play;
+
+// step by step depiction of mutlichannel expansion in which an array argument produces an array of UGENS
+{SinOsc.ar([350, 353]) * 0.2}.play;
+{[SinOsc.ar(350), SinOsc.ar(353)] * 0.2}.play;
+{[SinOsc.ar(350) * 0.2, SinOsc.ar(353) * 0.2]}.play;
+
+// a UGEN function involving a binary operation between two multichannel singals. The 450 Hz tone is modulated by a 1 Hz oscillator, and the 800 Hz tone is modulated by a 9 Hz oscillator
+
+(
+{
+	var sig, mod;
+	sig = SinOsc.ar([450, 800]);
+	mod = SinOsc.kr([1, 9]).range(0,1);
+	sig = sig * mod;
+	sig = sig * 0.2
+}.play
+)
