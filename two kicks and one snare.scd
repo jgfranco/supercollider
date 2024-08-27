@@ -15,7 +15,7 @@ SynthDef(\kick, {
 )
 //
 
-
+// this is a new Comment added on terminal via nano
 
 
 // for a more acousting sounding kick, layer many sine waves
