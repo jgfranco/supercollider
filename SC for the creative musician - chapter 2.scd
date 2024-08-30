@@ -267,8 +267,38 @@ s.meter;
 {
 	var sig, mod;
 	sig = SinOsc.ar([450, 800]);
-	mod = SinOsc.kr([1, 9]).range(0,1);
+	mod = SinOsc.kr([1, 9]).range(0, 1);
 	sig = sig * mod;
 	sig = sig * 0.2
 }.play
 )
+
+// Duplicating a UGEN vs UGEN arguement, which produces different behaviour when applied to stochastic signals
+
+// these two expresions produce the same signal:
+{SinOsc.ar(300 ! 2, mul: 0.5)}.play;
+{SinOsc.ar(300, mul: 0.5) ! 2}.play;
+
+// these two expresions produce different signals:
+{PinkNoise.ar(mul:0.2) ! 2}.play; // point source between the speakers
+{PinkNoise.ar(mul:0.2 ! 2)}.play; // wide source between the speakers
+
+// similar to when you try to create an array of random numbers
+
+rrand(1, 9) !8; // eight copies of one random number
+{rrand(1, 9)} !8; // eight uniquely generated random numbers
+
+
+// erronously applyin duplication to a multichanel signal
+
+(
+{
+	var sig;
+	sig = [SinOsc.ar(300), PinkNoise.ar()];
+	sig = sig * 0.1;
+	sig = sig ! 2;
+}.play;
+)
+
+
+
