@@ -301,4 +301,15 @@ rrand(1, 9) !8; // eight copies of one random number
 )
 
 
+// Use of Pan2 to "move" a sound in the stereophonic field
+
+(
+{
+	var sig, pan;
+	pan = SinOsc.kr(0.5) * 0.8;
+	sig = PinkNoise.ar * 0.2;
+	sig = Pan2.ar(sig, pan);
+}.play;
+)
+{SinOsc.kr(0.5) * 0.8}.plot(2);
 
