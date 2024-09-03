@@ -313,3 +313,23 @@ rrand(1, 9) !8; // eight copies of one random number
 )
 {SinOsc.kr(0.5) * 0.8}.plot(2);
 
+// an attempt to tplay a 50-channel signal. Only the lowest two channels will be heard.
+s.boot;
+(
+{
+	var sig, freq;
+	freq = {exprand(200, 2000)} ! 50;
+	sig = SinOsc.ar(freq) * 0.1;
+}.play;
+)
+
+(
+{
+	var sig, freq;
+	freq = {exprand(400, 4000)} ! 50;
+	sig = SinOsc.ar(freq) * 0.1;
+	sig = Splay.ar(sig);
+}.play;
+)
+
+
