@@ -332,4 +332,66 @@ s.boot;
 }.play;
 )
 
+// a simple UGEN function used to illustrate the process of conversion to a Synthdef
 
+(
+x = {
+	var sig;
+	sig = SinOsc.ar([350, 353]);
+	sig = sig * 0.2;
+}.play;
+)
+x.release(2);
+
+// a synthdef created from the previous UGEN function
+
+(
+SynthDef(\test, {
+	var sig;
+	sig = SinOsc.ar([350, 353]);
+	sig = sig * 0.2;
+	Out.ar(0, sig);
+}).add;
+)
+
+// creating and freeing a synth
+
+x = Synth(\test);
+x.free;
+
+// a more flexibly designed synthdef with multiple arguments
+
+(
+SynthDef(\test, {
+	arg freq = 350, amp = 0.2, atk = 0.01, dec = 0.3, slev = 0.4, rel = 2, gate = 1, out =0;
+	var sig, env;
+	env = EnvGen.kr(
+		Env.adsr(atk, dec, slev, rel),
+		gate, doneAction: 2
+	);
+	sig = SinOsc.ar(freq + [0, 1]);
+	sig = sig * env;
+	sig = sig * amp;
+	Out.ar(out, sig);
+}).add;
+)
+
+x = Synth(\test);
+x.set(\freq, 450);
+x.set(\amp, 0.5);
+x.set(\gate, 0, \rel, 3);
+
+x = Synth(\test, [freq:800, amp: 0.1, atk: 4, slev: 1]);
+x.set(\gate, 0);
+
+
+// a pair of code expressions that generate and fade a tone cluster
+
+(
+// return an array of four Synths, assigned to x
+x = [205, 310, 525, 700].collect({ |f|
+	Synth.new(\test, [\freq, f, \amp, 0.1]);
+});
+)
+
+x.do({ |n| n.set(\gate, 0, \rel, 5) });
