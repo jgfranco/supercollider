@@ -1,4 +1,6 @@
 s.boot;
+
+
 Server.local.boot;
 
 s.quit;
@@ -395,3 +397,68 @@ x = [205, 310, 525, 700].collect({ |f|
 )
 
 x.do({ |n| n.set(\gate, 0, \rel, 5) });
+
+// randomness in a SynthDef
+
+(
+SynthDef(\rand_lang,
+	{
+		var sig = SinOsc.ar({exprand(200, 2000)} ! 30);
+		sig = Splay.ar(sig) * 0.05;
+		Out.ar(0, sig);
+}).add;
+)
+Synth(\rand_lang); // same randomness every time
+
+(
+SynthDef(\rand_ugen,
+	{
+		var sig = SinOsc.ar({ExpRand(200, 2000)} ! 30);
+		sig = Splay.ar(sig) * 0.05;
+		Out.ar(0, sig);
+}).add;
+)
+
+Synth(\rand_ugen); // unique randomness every time
+s.scope;
+
+// alternate expression of frequency and amplitude
+
+60.midicps;
+500.cpsmidi;
+
+-15.dbamp;
+0.3.ampdb;
+
+(
+SynthDef.new(\test, {
+	arg freq = 350, amp = 0.2, atk = 0.01, dec = 0.3, slev = 0.4, rel = 1, gate = 1, out = 0;
+	var sig, env;
+	env = EnvGen.kr(
+		Env.adsr(atk, dec, slev, rel),
+		gate,
+		doneAction: 2
+	);
+	sig = SinOsc.ar(freq + [0, 1]);
+	sig = sig * env;
+	sig = sig * amp;
+	Out.ar(out, sig);
+}).add;
+)
+
+x = Synth(\test, [freq: 60.midicps, amp: -20.dbamp]);
+x.set(\freq, 60.midicps); // increase pitch by two semitones
+x.set(\amp, 0.dbamp); // increaselevel by 8 db
+x.set(\gate, 0);
+
+// Helpful Server Tools
+
+(
+x = {
+	var sig, freq;
+	freq = SinOsc.kr(0.2).exprange(200, 800).poll(20);
+	sig = SinOsc.ar(freq);
+	sig = sig * 0.2;
+	sig = sig ! 2;
+}.play;
+)
