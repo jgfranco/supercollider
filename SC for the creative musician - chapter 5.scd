@@ -241,7 +241,7 @@ SynthDef(\bpf_brown, {
 }).add;
 )
 
-(instrument: \bpf_brown, freq: 800, atk: 0.001, rel: 2, amp: 0.8).play;
+(instrument: \bpf_brown, freq: 800, atk: 0.001, rel: 3, amp: 0.3).play;
 
 (degree: 0).play;
 (degree: 1).play; // modal transposition by scale degree
@@ -254,20 +254,141 @@ SynthDef(\bpf_brown, {
 
 (freq: 261.626).play;
 (freq: 293.665).play; //Hertz
-
+s.reboot;
 (degree: 0).play;
 (degree: 0.1).play; // sharp
 
+(degree: 0).play;
 (degree: 0s).play; // sharp
 (degree: 0b).play; // flat
 
+// automatic gate closure when using an event to create a synth with a gated envelope
+
+(
+SynthDef(\bpf_brown, {
+	arg atk = 0.02, rel = 2, gate = 1, freq = 800, rq = 0.005, pan = 0, amp =1, out = 0;
+	var sig, env;
+	env = Env.asr(atk, 1, rel).kr(2,gate);
+	sig = BrownNoise.ar(0.8);
+	sig = BPF.ar(sig, freq, rq, 1 /rq.sqrt);
+	sig = Pan2.ar(sig, pan, amp) * env;
+	Out.ar(out,sig);
+}).add;
+)
+
+x = Synth(\bpf_brown, [freq: 500, amp: 0.2]);
+x.set(\gate, 0); // manual gate closure
+
+(instrument: \bpf_brown, freq: 500, amp: 0.2).play; // automatic gate closure
+
+// using Pbind to manually play a sequence of note events
+
+(
+p = Pbind(
+	\midinote, Pseq([55, 57, 60], 2),
+	\db, Pwhite(-20.0, -10.0, 6),
+	\pan, Prand([-0.5,0, 0.5], 6)
+);
+)
+~seq = p.asStream;
+~seq.next(()).play;
+~seq.reset;
+
+(
+p = Pbind(
+	\midinote, Pseq([55,57,60],2).trace // use of trace to visualize what the Pbind is doing
+);
+~seq = p.play
+)
+
+//using the dur key to specify timing information for an EventStreamPlayer
+
+(
+p = Pbind(
+	\dur, Pseq([0.75, 0.25, 0.75, 0.25, 0.5, 0.5]),
+	\midinote, Pseq([55, 57, 60], 2),
+	\db, Pwhite(-20.0, -10.0, 6),
+	\pan, Prand([-0.5,0, 0.5], 6)
+);
+
+~seq = p.play;
+)
+
+
+// rythmically quantizing two EvenStreamPlayers on a custom TempoClock
+
+(
+t = TempoClock(90/60);
+
+p = Pbind(
+	\dur, 0.25,
+	\midinote, Pwhite(48, 60, inf);
+
+);
+
+q = Pbind(
+	\dur, 0.25,
+	\midinote, Pwhite(72, 84, inf);
+);
+)
+
+~seq_p = p.play(t, quant:4);
+~seq_q = q.play(t, quant:4);
 
 
 
+s.reboot;
 
+// use of rest events in a duration pattern to express a musical figure
 
+t = TempoClock(112/60);
 
+(
+Pbind(
+	\dur, Pseq([
+		Pseq([Rest(1/4), 1/4], 4),
+		Pseq([1/4, Rest(1/4), 1/4, Rest(1/4), 1/4, Rest(3/4)])
+	], 1),
+	\sustain,  0.1,
+	\degree, Pseq([
+		0,4,0,5,0,7,0,4,
+		5,0,7,0,8,0,0,0
+	]),
+).play(t);
+)
 
+// using symbols in a pitch pattern to express the same musical phrase as above
+t = TempoClock(112/60);
+
+(
+Pbind(
+	\dur, 1/4,
+	\sustain,  0.1,
+	\degree, Pseq([
+		\,4,\,5,\,7,\,4,
+		5,\,7,\,8,\,\,\
+	]),
+).play(t);
+)
+
+// pattern manipulation of the type key to express the musci phrase as above
+
+t = TempoClock(112/60);
+
+(
+Pbind(
+	\type, Pseq([
+		Pseq([\rest, \note], 4), // bar 1
+		Pseq([\note, \rest], 2), \note, Pseq([\rest], 3) // bar 2
+	], 1),
+	\dur, 1/4,
+	\sustain,  0.1,
+	\degree, Pseq([
+		0, 4,0,5,0,7,0,4,
+		5,0,7,0,8,0,0,0
+	]),
+).play(t);
+)
 
 
 
