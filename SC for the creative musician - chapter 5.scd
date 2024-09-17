@@ -374,7 +374,7 @@ Pbind(
 // pattern manipulation of the type key to express the musci phrase as above
 
 t = TempoClock(112/60);
-
+s.reboot;
 (
 Pbind(
 	\type, Pseq([
